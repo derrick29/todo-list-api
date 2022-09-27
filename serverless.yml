@@ -1,0 +1,148 @@
+service: todo-list-api
+
+plugins:
+  - serverless-offline
+  - serverless-plugin-browserifier
+
+custom:
+  serverless-offline:
+    useChildProcesses: true
+  browserify:
+    exclude:
+      - aws-sdk
+
+package:
+  individually: true
+  exclude:
+    - "*"
+
+provider:
+  name: aws
+  stage: ${opt:stage, 'dev'}
+  runtime: nodejs14.x
+  timeout: 10
+  role: !Sub arn:aws:iam::${AWS::AccountId}:role/TodoListAPIRole
+  environment:
+    PGHOST: 'localhost'
+    PGUSER: todo_user
+    PGDATABASE: tododb
+    PGPASSWORD: todopass
+    PGPORT: 5432
+    JWT_SECRET: local_secret_0000
+    STAGE: ${self:provider.stage}
+    S3_BUCKET: todolistapp092622
+    SECRETS_FILE: 'secrets.json'
+  httpApi:
+    cors: true
+    authorizers:
+      customAuthorizer:
+        type: request
+        functionName: lambdaAuthorizer
+        identitySource: $request.header.Authorization
+
+functions:
+  lambdaAuthorizer:
+    handler: src/handlers/AUTH/authorizer.handler
+    package:
+      patterns:
+        - src/handlers/AUTH/authorizer
+    name: lambdaAuthorizer
+  home:
+    handler: src/handlers/home.handler
+    package:
+      patterns:
+        - src/handlers/home
+        - src/utils/util
+    name: lambdaHome
+    events:
+      - httpApi:
+          method: get
+          path: /
+  register:
+    handler: src/handlers/USERS/register.handler
+    package:
+      patterns:
+        - src/handlers/USERS/register
+        - src/utils/util
+    name: lambdaRegister
+    events:
+      - httpApi:
+          method: post
+          path: /register
+  login:
+    handler: src/handlers/USERS/login.handler
+    package:
+      patterns:
+        - src/handlers/USERS/login
+        - src/utils/util
+    name: lambdaLogin
+    events:
+      - httpApi:
+          method: post
+          path: /login
+  addTodo:
+    handler: src/handlers/TODO/addTodo.handler
+    package:
+      patterns:
+        - src/handlers/TODO/addTodo
+        - src/utils/util
+    name: lambdaAddTodo
+    events:
+      - httpApi:
+          method: post
+          path: /todos/add
+          authorizer: 
+            name: customAuthorizer
+  getTodos:
+    handler: src/handlers/TODO/getTodos.handler
+    package:
+      patterns:
+        - src/handlers/TODO/getTodos
+        - src/utils/util
+    name: lambdaGetTodos
+    events:
+      - httpApi:
+          method: get
+          path: /todos
+          authorizer: 
+            name: customAuthorizer
+  getTodo:
+    handler: src/handlers/TODO/getTodo.handler
+    package:
+      patterns:
+        - src/handlers/TODO/getTodo
+        - src/utils/util
+    name: lambdaGetTodo
+    events:
+      - httpApi:
+          method: get
+          path: /todos/getTodo
+          authorizer: 
+            name: customAuthorizer
+  updateTodo:
+    handler: src/handlers/TODO/updateTodo.handler
+    package:
+      patterns:
+        - src/handlers/TODO/updateTodo
+        - src/utils/util
+    name: lambdaUpdateTodo
+    events:
+      - httpApi:
+          method: put
+          path: /todos
+          authorizer: 
+            name: customAuthorizer
+  deleteTodo:
+    handler: src/handlers/TODO/deleteTodo.handler
+    package:
+      patterns:
+        - src/handlers/TODO/deleteTodo
+        - src/utils/util
+    name: lambdaDeleteTodo
+    events:
+      - httpApi:
+          method: delete
+          path: /todos
+          authorizer: 
+            name: customAuthorizer
+  
