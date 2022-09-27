@@ -4,13 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --coverage",
     "local": "nodemon --exec serverless offline --stage local"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "jest": "^29.0.3",
     "nodemon": "^2.0.20",
     "serverless-offline": "^10.2.1",
     "serverless-plugin-browserifier": "^3.1.1",
